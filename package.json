@@ -13,7 +13,9 @@
   "author": "hiromasaishiwata <kotobukitsukasaneko33@gmail.com> (http://plgn-foods.com/)",
   "license": "ISC",
   "dependencies": {
-    "fastify": "^4.9.2"
+    "@graphql-yoga/node": "^2.13.13",
+    "fastify": "^4.9.2",
+    "graphql": "^16.6.0"
   },
   "devDependencies": {
     "@types/node": "^18.11.0",
