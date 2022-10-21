@@ -13,125 +13,29 @@ import {
 import { DateTimeResolver } from "graphql-scalars";
 // import { User, Post, Comment } from "nexus-prisma";
 import { Prisma } from "@prisma/client";
+import { User, Comment, Post } from "./model";
 
 export const DateTime = asNexusMethod(DateTimeResolver, "date");
 
 const Query = objectType({
   name: "Query",
   definition(t) {
-    t.nonNull.list.nonNull.field("allUsers", {
+    t.nonNull.list.nonNull.field("users", {
       type: "User",
-      resolve: async (_parent, _args, context, info) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "user",
-          "prisma.action": "findMany",
-        });
-        const users = await context.prisma.user.findMany();
-        childSpan.end();
-        return users;
+      resolve: (_, __, ctx) => {
+        return ctx.prisma.user.findMany();
       },
     });
-
-    t.field("status", {
-      type: objectType({
-        name: "Status",
-        definition(t) {
-          t.boolean("up");
-        },
-      }),
-      resolve: (_parent, _args, context) => {
-        return { up: true };
-      },
-    });
-
-    t.nullable.field("postById", {
+    t.nonNull.list.nonNull.field("posts", {
       type: "Post",
-      args: {
-        id: nonNull(intArg()),
-      },
-      resolve: async (_parent, args, context, info) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "post",
-          "prisma.action": "findUnique",
-        });
-        const posts = await context.prisma.post.findUnique({
-          where: { id: args.id || undefined },
-        });
-        childSpan.end();
-        return posts;
+      resolve: (_, __, ctx) => {
+        return ctx.prisma.post.findMany();
       },
     });
-
-    t.nonNull.list.nonNull.field("feed", {
-      type: "Post",
-      args: {
-        published: booleanArg(),
-        searchString: stringArg(),
-        skip: intArg(),
-        take: intArg(),
-        orderBy: arg({
-          type: "PostOrderByUpdatedAtInput",
-        }),
-      },
-      resolve: async (_parent, args, context, info) => {
-        const or = args.searchString
-          ? {
-              OR: [
-                { title: { contains: args.searchString } },
-                { content: { contains: args.searchString } },
-              ],
-            }
-          : {};
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "post",
-          "prisma.action": "findMany",
-        });
-        const feed = context.prisma.post.findMany({
-          where: {
-            published: args.published ?? true,
-            ...or,
-          },
-          take: args.take || undefined,
-          skip: args.skip || undefined,
-          orderBy: args.orderBy || undefined,
-        });
-        childSpan.end();
-        return feed;
-      },
-    });
-
-    t.list.field("draftsByUser", {
-      type: "Post",
-      args: {
-        userUniqueInput: nonNull(
-          arg({
-            type: "UserUniqueInput",
-          })
-        ),
-      },
-      resolve: async (_parent, args, context, info) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "post",
-          "prisma.action": "findMany",
-        });
-        const drafts = await context.prisma.user
-          .findUnique({
-            where: {
-              id: args.userUniqueInput.id || undefined,
-              email: args.userUniqueInput.email || undefined,
-            },
-          })
-          .posts({
-            where: {
-              published: false,
-            },
-          });
-        childSpan.end();
-        return drafts;
+    t.nonNull.list.nonNull.field("comments", {
+      type: "Comment",
+      resolve: (_, __, ctx) => {
+        return ctx.prisma.comment.findMany();
       },
     });
   },
@@ -358,6 +262,9 @@ export const schema = makeSchema({
   types: [
     Query,
     Mutation,
+    User,
+    Comment,
+    Post,
     UserUniqueInput,
     UserCreateInput,
     PostCreateInput,
