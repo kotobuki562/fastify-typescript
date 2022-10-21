@@ -14,6 +14,7 @@ import { DateTimeResolver } from "graphql-scalars";
 // import { User, Post, Comment } from "nexus-prisma";
 import { Prisma } from "@prisma/client";
 import { User, Comment, Post } from "./model";
+import path from "path";
 
 export const DateTime = asNexusMethod(DateTimeResolver, "date");
 
@@ -274,8 +275,8 @@ export const schema = makeSchema({
     DateTime,
   ],
   outputs: {
-    schema: __dirname + "src/generated/schema.graphql",
-    typegen: __dirname + "src/generated/nexus.ts",
+    schema: path.join(process.cwd(), "src/generated/schema.graphql"),
+    typegen: path.join(process.cwd(), "src/generated/nexus.ts"),
   },
   contextType: {
     module: require.resolve("./context"),
