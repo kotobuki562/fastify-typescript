@@ -21,3 +21,15 @@ $ npm run build
 ```
 $ npm run start
 ```
+
+### DB migrate
+
+```
+$ npm run migrate:dev
+```
+
+### Generate Schema
+
+```
+$ npm run generate
+```

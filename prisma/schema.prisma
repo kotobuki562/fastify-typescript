@@ -31,6 +31,8 @@ model Post {
   author    User?     @relation(fields: [authorId], references: [id])
   authorId  Int?
   comments  Comment[]
+
+  @@index([authorId])
 }
 
 model Comment {
@@ -41,4 +43,6 @@ model Comment {
   post      Post     @relation(fields: [postId], references: [id])
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
+
+  @@index([postId, authorId])
 }
