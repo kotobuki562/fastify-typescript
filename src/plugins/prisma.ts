@@ -8,11 +8,11 @@ declare module "fastify" {
   }
 }
 
-const prismaPlugin: FastifyPluginAsync = fp(async (server, options) => {
-  const prisma = new PrismaClient({
-    log: ["error", "warn"],
-  });
+export const prisma = new PrismaClient({
+  log: ["error", "warn"],
+});
 
+const prismaPlugin: FastifyPluginAsync = fp(async (server, options) => {
   await prisma.$connect();
 
   server.decorate("prisma", prisma);

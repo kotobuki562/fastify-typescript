@@ -11,6 +11,10 @@ import { schema } from "./schema";
 import prismaPlugin from "./plugins/prisma";
 import { Context } from "./context";
 import statusPlugin from "./plugins/status";
+import { cors } from "./cors";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const app = fastify({ logger: true });
 
@@ -18,6 +22,7 @@ const graphQLServer = createServer<{
   req: FastifyRequest;
   reply: FastifyReply;
 }>({
+  cors,
   // Integrate Fastify logger
   schema,
   /* キャッシュのオプショn
@@ -31,6 +36,7 @@ const graphQLServer = createServer<{
     warn: (...args) => args.forEach((arg) => app.log.warn(arg)),
     error: (...args) => args.forEach((arg) => app.log.error(arg)),
   },
+  maskedErrors: false,
 });
 
 app.register(statusPlugin);
