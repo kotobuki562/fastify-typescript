@@ -110,12 +110,7 @@ export interface NexusGenFieldTypes {
     postId: number; // Int!
   }
   Mutation: { // field return type
-    createComment: NexusGenRootTypes['Comment'] | null; // Comment
-    createDraft: NexusGenRootTypes['Post'] | null; // Post
-    deletePost: NexusGenRootTypes['Post'] | null; // Post
-    likePost: NexusGenRootTypes['Post'] | null; // Post
-    signupUser: NexusGenRootTypes['User']; // User!
-    togglePublishPost: NexusGenRootTypes['Post'] | null; // Post
+    createUser: NexusGenRootTypes['User']; // User!
   }
   Post: { // field return type
     author: NexusGenRootTypes['User'] | null; // User
@@ -153,12 +148,7 @@ export interface NexusGenFieldTypeNames {
     postId: 'Int'
   }
   Mutation: { // field return type name
-    createComment: 'Comment'
-    createDraft: 'Post'
-    deletePost: 'Post'
-    likePost: 'Post'
-    signupUser: 'User'
-    togglePublishPost: 'Post'
+    createUser: 'User'
   }
   Post: { // field return type name
     author: 'User'
@@ -187,27 +177,8 @@ export interface NexusGenFieldTypeNames {
 
 export interface NexusGenArgTypes {
   Mutation: {
-    createComment: { // args
-      authorEmail: string; // String!
-      data: NexusGenInputs['CommentCreateInput']; // CommentCreateInput!
-      postId: number; // Int!
-    }
-    createDraft: { // args
-      authorEmail: string; // String!
-      data: NexusGenInputs['PostCreateInput']; // PostCreateInput!
-    }
-    deletePost: { // args
-      id: number; // Int!
-    }
-    likePost: { // args
-      id: number; // Int!
-    }
-    signupUser: { // args
+    createUser: { // args
       data: NexusGenInputs['UserCreateInput']; // UserCreateInput!
-    }
-    togglePublishPost: { // args
-      id: number; // Int!
-      published: boolean; // Boolean!
     }
   }
 }

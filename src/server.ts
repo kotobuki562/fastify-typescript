@@ -19,6 +19,12 @@ const graphQLServer = createServer<{
   reply: FastifyReply;
 }>({
   // Integrate Fastify logger
+  schema,
+  /* キャッシュのオプショn
+  parserCache: {
+    documentCache: documentCacheStore as CacheStore<DocumentNode>,
+    errorCache: errorCacheStore as CacheStore<Error>,
+  }, */
   logging: {
     debug: (...args) => args.forEach((arg) => app.log.debug(arg)),
     info: (...args) => args.forEach((arg) => app.log.info(arg)),
