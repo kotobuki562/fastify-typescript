@@ -15,6 +15,8 @@ import { DateTimeResolver } from "graphql-scalars";
 import { Prisma } from "@prisma/client";
 import { User, Comment, Post } from "./model";
 import path from "path";
+import { GraphQLYogaError } from "@graphql-yoga/node";
+import { prisma } from "./plugins/prisma";
 
 interface CacheStore<T> {
   get(key: string): T | undefined;
@@ -28,8 +30,15 @@ const Query = objectType({
   definition(t) {
     t.nonNull.list.nonNull.field("users", {
       type: "User",
-      resolve: (_, __, ctx) => {
-        return ctx.prisma.user.findMany();
+      resolve: async (_, __, ctx) => {
+        console.log(ctx?.prisma || "no prisma");
+        const users = await prisma.user.findMany();
+        if (users.length === 0) {
+          throw new GraphQLYogaError("ユーザーが見つかりません", {
+            code: "USER_NOT_FOUND",
+          });
+        }
+        return users;
       },
     });
     t.nonNull.list.nonNull.field("posts", {
