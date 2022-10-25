@@ -16,6 +16,11 @@ import { Prisma } from "@prisma/client";
 import { User, Comment, Post } from "./model";
 import path from "path";
 
+interface CacheStore<T> {
+  get(key: string): T | undefined;
+  set(key: string, value: T): void;
+}
+
 export const DateTime = asNexusMethod(DateTimeResolver, "date");
 
 const Query = objectType({
@@ -45,7 +50,7 @@ const Query = objectType({
 const Mutation = objectType({
   name: "Mutation",
   definition(t) {
-    t.nonNull.field("signupUser", {
+    t.nonNull.field("createUser", {
       type: "User",
       args: {
         data: nonNull(
@@ -54,162 +59,18 @@ const Mutation = objectType({
           })
         ),
       },
-      resolve: async (_, args, context, info) => {
-        const postData = args.data.posts?.map((post) => {
-          return { title: post.title, content: post.content || undefined };
-        });
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "user",
-          "prisma.action": "create",
-        });
-        try {
-          const user = await context.prisma.user.create({
+      resolve: (_, { data }, ctx) => {
+        return ctx.prisma.user
+          .create({
             data: {
-              name: args.data.name,
-              email: args.data.email,
-              posts: {
-                create: postData,
-              },
+              name: data.name,
+              email: data.email,
             },
+          })
+          .catch((e) => {
+            console.error(e);
+            throw e;
           });
-          return user;
-        } catch (e) {
-          childSpan.setAttribute("error", true);
-          childSpan.setAttribute("prisma.error", e.toString());
-          throw e;
-        } finally {
-          childSpan.end();
-        }
-      },
-    });
-
-    t.field("createDraft", {
-      type: "Post",
-      args: {
-        data: nonNull(
-          arg({
-            type: "PostCreateInput",
-          })
-        ),
-        authorEmail: nonNull(stringArg()),
-      },
-      resolve: async (_, args, context) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "post",
-          "prisma.action": "create",
-        });
-        const draft = await context.prisma.post.create({
-          data: {
-            title: args.data.title,
-            content: args.data.content,
-            author: {
-              connect: { email: args.authorEmail },
-            },
-          },
-        });
-        childSpan.end();
-        return draft;
-      },
-    });
-
-    t.field("createComment", {
-      type: "Comment",
-      args: {
-        data: nonNull(
-          arg({
-            type: "CommentCreateInput",
-          })
-        ),
-        authorEmail: nonNull(stringArg()),
-        postId: nonNull(intArg()),
-      },
-      resolve: async (_, args, context) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "comment",
-          "prisma.action": "create",
-        });
-        const comment = await context.prisma.comment.create({
-          data: {
-            comment: args.data.comment,
-            post: {
-              connect: { id: args.postId },
-            },
-            author: {
-              connect: { email: args.authorEmail },
-            },
-          },
-        });
-        childSpan.end();
-        return comment;
-      },
-    });
-
-    t.field("likePost", {
-      type: "Post",
-      args: {
-        id: nonNull(intArg()),
-      },
-      resolve: async (_, args, context) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "post",
-          "prisma.action": "update",
-        });
-        const post = await context.prisma.post.update({
-          data: {
-            likes: {
-              increment: 1,
-            },
-          },
-          where: {
-            id: args.id,
-          },
-        });
-        childSpan.end();
-        return post;
-      },
-    });
-
-    t.field("togglePublishPost", {
-      type: "Post",
-      args: {
-        id: nonNull(intArg()),
-        published: nonNull(booleanArg()),
-      },
-      resolve: async (_, args, context) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "post",
-          "prisma.action": "update",
-        });
-        const post = await context.prisma.post.update({
-          where: { id: args.id },
-          data: { published: args.published },
-        });
-        childSpan.end();
-        return post;
-      },
-    });
-
-    t.field("deletePost", {
-      type: "Post",
-      args: {
-        id: nonNull(intArg()),
-      },
-      resolve: async (_, args, context) => {
-        const { tracer } = context.request.openTelemetry();
-        const childSpan = tracer.startSpan(`prisma`).setAttributes({
-          "prisma.model": "post",
-          "prisma.action": "delete",
-        });
-        const post = await context.prisma.post.delete({
-          where: { id: args.id },
-        });
-        childSpan.end();
-        return post;
       },
     });
   },
