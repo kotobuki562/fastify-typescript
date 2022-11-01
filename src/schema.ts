@@ -15,8 +15,9 @@ import { DateTimeResolver, JSONObjectResolver } from "graphql-scalars";
 import { Prisma } from "@prisma/client";
 import { User, Comment, Post } from "./model";
 import path from "path";
-import { GraphQLYogaError } from "@graphql-yoga/node";
+
 import { prisma } from "./plugins/prisma";
+import { graphqlYogaError } from "./error";
 
 interface CacheStore<T> {
   get(key: string): T | undefined;
@@ -34,7 +35,9 @@ const Query = objectType({
       resolve: async (_, __, ___) => {
         const users = await prisma.user.findMany();
         if (users.length === 0) {
-          throw new GraphQLYogaError("ユーザーが見つかりません", {
+          throw graphqlYogaError({
+            message: "ユーザーが見つかりません",
+            description: "ユーザーが見つかりません",
             code: "USER_NOT_FOUND",
           });
         }
@@ -46,7 +49,9 @@ const Query = objectType({
       resolve: async (_, __, ___) => {
         const posts = await prisma.post.findMany();
         if (posts.length === 0) {
-          throw new GraphQLYogaError("投稿が見つかりません", {
+          throw graphqlYogaError({
+            message: "投稿が見つかりません",
+            description: "投稿が見つかりません",
             code: "POST_NOT_FOUND",
           });
         }
@@ -55,8 +60,16 @@ const Query = objectType({
     });
     t.nonNull.list.nonNull.field("comments", {
       type: "Comment",
-      resolve: (_, __, ___) => {
-        return prisma.comment.findMany();
+      resolve: async (_, __, ___) => {
+        const comments = await prisma.comment.findMany();
+        if (comments.length === 0) {
+          throw graphqlYogaError({
+            message: "コメントが見つかりません",
+            description: "コメントが見つかりません",
+            code: "COMMENT_NOT_FOUND",
+          });
+        }
+        return comments;
       },
     });
   },
