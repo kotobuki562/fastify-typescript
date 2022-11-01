@@ -36,7 +36,7 @@ const graphQLServer = createServer<{
     warn: (...args) => args.forEach((arg) => app.log.warn(arg)),
     error: (...args) => args.forEach((arg) => app.log.error(arg)),
   },
-  maskedErrors: false,
+  // maskedErrors: false,
 });
 
 app.register(statusPlugin);
