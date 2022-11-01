@@ -10,7 +10,7 @@ import {
   enumType,
   booleanArg,
 } from "nexus";
-import { DateTimeResolver } from "graphql-scalars";
+import { DateTimeResolver, JSONObjectResolver } from "graphql-scalars";
 // import { User, Post, Comment } from "nexus-prisma";
 import { Prisma } from "@prisma/client";
 import { User, Comment, Post } from "./model";
@@ -24,14 +24,14 @@ interface CacheStore<T> {
 }
 
 export const DateTime = asNexusMethod(DateTimeResolver, "date");
+export const JSONObject = asNexusMethod(JSONObjectResolver, "json");
 
 const Query = objectType({
   name: "Query",
   definition(t) {
     t.nonNull.list.nonNull.field("users", {
       type: "User",
-      resolve: async (_, __, ctx) => {
-        console.log(ctx?.prisma || "no prisma");
+      resolve: async (_, __, ___) => {
         const users = await prisma.user.findMany();
         if (users.length === 0) {
           throw new GraphQLYogaError("ユーザーが見つかりません", {
@@ -43,14 +43,20 @@ const Query = objectType({
     });
     t.nonNull.list.nonNull.field("posts", {
       type: "Post",
-      resolve: (_, __, ctx) => {
-        return ctx.prisma.post.findMany();
+      resolve: async (_, __, ___) => {
+        const posts = await prisma.post.findMany();
+        if (posts.length === 0) {
+          throw new GraphQLYogaError("投稿が見つかりません", {
+            code: "POST_NOT_FOUND",
+          });
+        }
+        return posts;
       },
     });
     t.nonNull.list.nonNull.field("comments", {
       type: "Comment",
-      resolve: (_, __, ctx) => {
-        return ctx.prisma.comment.findMany();
+      resolve: (_, __, ___) => {
+        return prisma.comment.findMany();
       },
     });
   },
@@ -151,6 +157,7 @@ export const schema = makeSchema({
   contextType: {
     module: require.resolve("./context"),
     export: "Context",
+    alias: "ctx",
   },
   sourceTypes: {
     modules: [
